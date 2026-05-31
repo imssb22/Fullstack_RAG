@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: atman-rag-api
+    env: python
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash-lite
+      - key: GEMINI_EMBEDDING_MODEL
+        value: gemini-embedding-001
+      - key: FRONTEND_ORIGIN
+        value: "*"
+      - key: AUTO_INGEST_SAMPLES
+        value: "true"
+      - key: ALLOW_SAMPLE_DOWNLOAD
+        value: "true"
+      - key: MIN_RELEVANCE_SCORE
+        value: "0.55"
+      - key: TOP_K
+        value: "5"

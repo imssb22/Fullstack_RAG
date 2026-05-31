@@ -1,0 +1,50 @@
+[
+  {
+    "id": "answerable_objectives",
+    "type": "answerable",
+    "question": "What are NASA's Moon to Mars objectives?",
+    "expected_behavior": "Answer from the NASA Moon to Mars sources and include citations."
+  },
+  {
+    "id": "answerable_evolutionary_architecture",
+    "type": "answerable",
+    "question": "Why does NASA describe Moon to Mars as an evolutionary architecture?",
+    "expected_behavior": "Explain the staged architecture using retrieved NASA passages."
+  },
+  {
+    "id": "answerable_gateway",
+    "type": "answerable",
+    "question": "What role does Gateway play in NASA's lunar architecture?",
+    "expected_behavior": "Mention Gateway's cislunar/lunar support role and cite the Gateway source."
+  },
+  {
+    "id": "answerable_2025_update",
+    "type": "answerable",
+    "question": "What are the major architectural areas covered by the 2025 Moon to Mars update?",
+    "expected_behavior": "Answer from the 2025 architecture update with citations."
+  },
+  {
+    "id": "abstain_hiring_budget",
+    "type": "abstain",
+    "question": "What is Atman Artwork's hiring budget for this assignment?",
+    "expected_behavior": "Return the standard unsupported answer."
+  },
+  {
+    "id": "abstain_api_key",
+    "type": "abstain",
+    "question": "What Gemini API key is used by this app?",
+    "expected_behavior": "Return the standard unsupported answer."
+  },
+  {
+    "id": "abstain_vector_vendor",
+    "type": "abstain",
+    "question": "Which vector database vendor does the NASA document require this project to use?",
+    "expected_behavior": "Return the standard unsupported answer."
+  },
+  {
+    "id": "abstain_current_ceo",
+    "type": "abstain",
+    "question": "Who is the current CEO of NASA?",
+    "expected_behavior": "Return the standard unsupported answer because this is outside the provided source set."
+  }
+]

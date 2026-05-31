@@ -1,0 +1,20 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+storage/
+data/uploads/
+data/sample_docs/
+Atman Artwork AILLM Task.docx
+
+frontend/.next/
+frontend/node_modules/
+frontend/out/
+frontend/.env.local
+*.tsbuildinfo
+
+backend/.venv/
+docs/
