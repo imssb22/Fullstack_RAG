@@ -21,14 +21,22 @@ rag = RagService(settings, gemini, vector_store, registry)
 app = FastAPI(title=settings.app_name)
 
 origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
-if settings.frontend_origin == "*":
+configured_origins = [
+    origin.strip()
+    for origin in settings.frontend_origin.split(",")
+    if origin.strip()
+]
+if "*" in configured_origins:
     origins = ["*"]
-elif settings.frontend_origin not in origins:
-    origins.append(settings.frontend_origin)
+else:
+    for origin in configured_origins:
+        if origin not in origins:
+            origins.append(origin)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=settings.frontend_origin_regex,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -42,6 +50,16 @@ async def startup() -> None:
     settings.uploads_dir.mkdir(parents=True, exist_ok=True)
     if settings.auto_ingest_samples and gemini.is_configured():
         await ingest_samples_internal(download_missing=settings.allow_sample_download)
+
+
+@app.get("/")
+def root() -> dict:
+    return {
+        "name": settings.app_name,
+        "status": "ok",
+        "docs": "/docs",
+        "health": "/api/health",
+    }
 
 
 @app.get("/api/health")

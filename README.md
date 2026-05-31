@@ -129,6 +129,7 @@ Backend on Render:
    - `AUTO_INGEST_SAMPLES=true`
    - `ALLOW_SAMPLE_DOWNLOAD=true`
    - `FRONTEND_ORIGIN=*` for the first test, then replace it with the Vercel URL.
+   - `FRONTEND_ORIGIN_REGEX=https://.*\.vercel\.app` if you want Vercel preview deployments to work too.
 5. Deploy and open `https://your-render-api.onrender.com/api/health`.
 6. After the first successful deploy, open the backend URL once. The free service may take a little while to wake up.
 
@@ -141,7 +142,9 @@ Frontend on Vercel:
    - `NEXT_PUBLIC_API_BASE_URL=https://your-render-api.onrender.com`
 5. Deploy.
 6. Open the Vercel URL, load NASA docs, ask one answerable question and one abstention question.
-7. Go back to Render and set `FRONTEND_ORIGIN=https://your-vercel-domain.vercel.app`, then redeploy the backend.
+7. Go back to Render and set `FRONTEND_ORIGIN=https://your-vercel-domain.vercel.app`, then redeploy the backend. If you are testing from Vercel preview URLs, also keep `FRONTEND_ORIGIN_REGEX=https://.*\.vercel\.app`.
+
+If the frontend still calls `https://your-render-api.onrender.com`, the Vercel environment variable was not available at build time. Update `NEXT_PUBLIC_API_BASE_URL`, make sure it is enabled for the deployment environment you are using, and redeploy the frontend.
 
 ## Where It Breaks At Scale
 

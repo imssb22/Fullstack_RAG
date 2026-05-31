@@ -16,6 +16,8 @@ services:
         value: gemini-embedding-001
       - key: FRONTEND_ORIGIN
         value: "*"
+      - key: FRONTEND_ORIGIN_REGEX
+        value: "https://.*\\.vercel\\.app"
       - key: AUTO_INGEST_SAMPLES
         value: "true"
       - key: ALLOW_SAMPLE_DOWNLOAD

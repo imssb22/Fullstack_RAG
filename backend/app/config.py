@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     gemini_embedding_model: str = "gemini-embedding-001"
 
     frontend_origin: str = "http://localhost:3000"
+    frontend_origin_regex: str | None = None
     qdrant_path: Path = PROJECT_ROOT / "storage" / "qdrant"
     collection_name: str = "atman_rag_chunks"
 
