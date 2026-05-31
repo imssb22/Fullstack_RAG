@@ -1,0 +1,284 @@
+:root {
+  color-scheme: light;
+  --bg: #f6f7f5;
+  --panel: #ffffff;
+  --text: #181a17;
+  --muted: #5d655c;
+  --line: #d9ded6;
+  --accent: #2f7d46;
+  --accent-dark: #236236;
+  --danger: #b13b3b;
+  --warn-bg: #fff4d8;
+  --ok-bg: #e9f7ed;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+.shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent-dark);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 8px;
+  font-size: 34px;
+  line-height: 1.15;
+}
+
+h2 {
+  margin-bottom: 12px;
+  font-size: 18px;
+}
+
+.summary {
+  max-width: 760px;
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.status,
+.badge {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: var(--panel);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 18px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panelHeader span,
+small,
+.muted {
+  color: var(--muted);
+}
+
+.primary,
+.upload {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 14px;
+  background: var(--accent);
+  color: #fff;
+  text-align: center;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary:hover,
+.upload:hover {
+  background: var(--accent-dark);
+}
+
+.primary:disabled,
+.upload:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.upload {
+  margin-top: 10px;
+  background: #30342f;
+}
+
+.upload input {
+  display: none;
+}
+
+.docList {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.docItem {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.docItem span {
+  display: grid;
+  gap: 4px;
+}
+
+.askForm {
+  display: grid;
+  gap: 10px;
+}
+
+.askForm label {
+  font-weight: 800;
+}
+
+textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.error {
+  border: 1px solid #efc2c2;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #fff1f1;
+  color: var(--danger);
+}
+
+.answerBlock {
+  margin-top: 22px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.badge {
+  display: inline-block;
+  margin-bottom: 12px;
+  font-weight: 800;
+}
+
+.badge.ok {
+  background: var(--ok-bg);
+  color: var(--accent-dark);
+}
+
+.badge.warn {
+  background: var(--warn-bg);
+  color: #745308;
+}
+
+.answer {
+  font-size: 18px;
+  line-height: 1.65;
+}
+
+.citations {
+  display: grid;
+  gap: 12px;
+}
+
+.citation,
+.retrieval article {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.citation div,
+.retrieval article {
+  display: grid;
+  gap: 6px;
+}
+
+.citation p,
+.retrieval p {
+  margin-bottom: 0;
+  color: #30342f;
+  line-height: 1.55;
+}
+
+a {
+  color: var(--accent-dark);
+  font-weight: 700;
+}
+
+.retrieval {
+  margin-top: 18px;
+}
+
+.retrieval summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.retrieval article {
+  margin-top: 12px;
+}
+
+@media (max-width: 860px) {
+  .header,
+  .grid {
+    display: block;
+  }
+
+  .status {
+    display: inline-block;
+    margin-top: 16px;
+  }
+
+  .documents {
+    margin-bottom: 16px;
+  }
+}
