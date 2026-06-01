@@ -19,7 +19,7 @@ class Settings(BaseSettings):
 
     llm_provider: str = "openrouter"
     openrouter_api_key: str | None = None
-    openrouter_model: str = "openrouter/free"
+    openrouter_model: str = "openai/gpt-oss-20b:free"
     openrouter_site_url: str = "http://localhost:3000"
     openrouter_app_name: str = "Atman RAG"
 
@@ -44,7 +44,8 @@ class Settings(BaseSettings):
     chunk_chars: int = 3200
     chunk_overlap_chars: int = 450
     top_k: int = 5
-    min_relevance_score: float = 0.55
+    min_relevance_score: float = 0.20
+    extractive_fallback_score: float = 0.35
     max_context_chars: int = 14000
 
     auto_ingest_samples: bool = False

@@ -217,7 +217,10 @@ export default function Home() {
 
               <h2>Citations</h2>
               {answer.citations.length === 0 && (
-                <p className="muted">No supporting citation was found.</p>
+                <p className="muted">
+                  No supporting citation was accepted. Related retrieved
+                  passages may still appear below for debugging.
+                </p>
               )}
               <div className="citations">
                 {answer.citations.map((citation) => (

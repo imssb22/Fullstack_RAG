@@ -31,6 +31,39 @@ class GeminiEmbedder:
 class LocalHashEmbedder:
     """Deterministic local embeddings for quota-free retrieval demos."""
 
+    STOPWORDS = {
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "at",
+        "be",
+        "by",
+        "does",
+        "for",
+        "from",
+        "how",
+        "in",
+        "into",
+        "is",
+        "it",
+        "of",
+        "on",
+        "or",
+        "that",
+        "the",
+        "this",
+        "to",
+        "what",
+        "when",
+        "where",
+        "which",
+        "who",
+        "why",
+        "with",
+    }
+
     def __init__(self, dimensions: int):
         self.dimensions = dimensions
 
@@ -42,25 +75,41 @@ class LocalHashEmbedder:
 
     def _embed(self, text: str) -> list[float]:
         vector = [0.0] * self.dimensions
-        tokens = re.findall(r"[a-z0-9]+", text.lower())
+        tokens = [
+            self._stem(token)
+            for token in re.findall(r"[a-z0-9]+", text.lower())
+            if token not in self.STOPWORDS
+        ]
         if not tokens:
             return vector
 
-        features: list[str] = tokens[:]
+        features: list[tuple[str, float]] = [(token, 1.0) for token in tokens]
         features.extend(
-            f"{left}_{right}" for left, right in zip(tokens, tokens[1:], strict=False)
+            (f"{left}_{right}", 1.35)
+            for left, right in zip(tokens, tokens[1:], strict=False)
         )
 
-        for feature in features:
+        for feature, weight in features:
             digest = blake2b(feature.encode("utf-8"), digest_size=8).digest()
             bucket = int.from_bytes(digest[:4], "big") % self.dimensions
-            sign = 1.0 if digest[4] % 2 == 0 else -1.0
-            vector[bucket] += sign
+            vector[bucket] += weight
 
         norm = math.sqrt(sum(value * value for value in vector))
         if norm == 0:
             return vector
         return [value / norm for value in vector]
+
+    @staticmethod
+    def _stem(token: str) -> str:
+        if len(token) > 5 and token.endswith("ies"):
+            return token[:-3] + "y"
+        if len(token) > 5 and token.endswith("ing"):
+            return token[:-3]
+        if len(token) > 5 and token.endswith("ed"):
+            return token[:-2]
+        if len(token) > 4 and token.endswith("s"):
+            return token[:-1]
+        return token
 
 
 class FastEmbedder:

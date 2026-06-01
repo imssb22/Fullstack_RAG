@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from pathlib import Path
+import re
 
 from app.config import Settings
 from app.schemas import AskResponse, Citation, DocumentRecord, RetrievedChunk
@@ -12,7 +13,7 @@ from app.services.documents import (
 )
 from app.services.embeddings import Embedder
 from app.services.gemini import GeminiError
-from app.services.llm import LLMClient
+from app.services.llm import LLMClient, LLMError
 from app.services.registry import DocumentRegistry
 from app.services.vector_store import VectorStore
 
@@ -121,7 +122,7 @@ class RagService:
         if provider == "gemini":
             return self.settings.gemini_embedding_model
         if provider == "local":
-            return f"local-hash-{self.settings.local_embedding_dimensions}"
+            return f"local-hash-v2-{self.settings.local_embedding_dimensions}"
         return None
 
     def _record_matches_embedding(self, record: DocumentRecord) -> bool:
@@ -160,9 +161,20 @@ class RagService:
                 retrieved_chunks=retrieved,
             )
 
-        model_result = await self.llm.generate_json(
-            self._build_prompt(question, retrieved)
-        )
+        try:
+            model_result = await self.llm.generate_json(
+                self._build_prompt(question, retrieved)
+            )
+        except LLMError as exc:
+            if retrieved[0].score >= self.settings.extractive_fallback_score:
+                return self._extractive_fallback(question, retrieved, str(exc))
+            return AskResponse(
+                answer=UNKNOWN_ANSWER,
+                supported=False,
+                citations=[],
+                retrieved_chunks=retrieved,
+                raw_model_output={"llm_error": str(exc)},
+            )
         supported = bool(model_result.get("supported"))
         answer = str(model_result.get("answer") or "").strip()
         citation_ids = [
@@ -285,3 +297,45 @@ Sources:
                 )
             )
         return citations
+
+    def _extractive_fallback(
+        self,
+        question: str,
+        chunks: list[RetrievedChunk],
+        reason: str,
+    ) -> AskResponse:
+        best = chunks[0]
+        answer = self._best_supported_excerpt(question, best.text)
+        citation = self._citations_from_ids([best.source_id], chunks)
+        return AskResponse(
+            answer=f"From the retrieved source: {answer}",
+            supported=True,
+            citations=citation,
+            retrieved_chunks=chunks,
+            raw_model_output={"fallback": "extractive", "reason": reason},
+        )
+
+    @staticmethod
+    def _best_supported_excerpt(question: str, text: str) -> str:
+        query_terms = {
+            term
+            for term in re.findall(r"[a-z0-9]+", question.lower())
+            if len(term) > 3
+        }
+        sentences = [
+            sentence.strip()
+            for sentence in re.split(r"(?<=[.!?])\s+", text)
+            if sentence.strip()
+        ]
+        if not sentences:
+            return text[:500].strip()
+
+        def score(sentence: str) -> int:
+            terms = set(re.findall(r"[a-z0-9]+", sentence.lower()))
+            return len(query_terms & terms)
+
+        ranked = sorted(sentences, key=score, reverse=True)
+        excerpt = " ".join(ranked[:2]).strip()
+        if len(excerpt) > 650:
+            excerpt = excerpt[:650].rsplit(" ", 1)[0].strip() + "..."
+        return excerpt

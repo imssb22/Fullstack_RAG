@@ -15,7 +15,7 @@ services:
       - key: OPENROUTER_API_KEY
         sync: false
       - key: OPENROUTER_MODEL
-        value: openrouter/free
+        value: openai/gpt-oss-20b:free
       - key: OPENROUTER_APP_NAME
         value: Atman RAG
       - key: OPENROUTER_SITE_URL
@@ -39,6 +39,8 @@ services:
       - key: ALLOW_SAMPLE_DOWNLOAD
         value: "true"
       - key: MIN_RELEVANCE_SCORE
-        value: "0.55"
+        value: "0.20"
+      - key: EXTRACTIVE_FALLBACK_SCORE
+        value: "0.35"
       - key: TOP_K
         value: "5"

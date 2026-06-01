@@ -6,7 +6,7 @@ A full-stack RAG application for the Atman Artwork LLP hiring task. Users can lo
 
 - Backend: FastAPI
 - Frontend: Next.js
-- LLM: OpenRouter free model router, default `openrouter/free`
+- LLM: OpenRouter free model, default `openai/gpt-oss-20b:free`
 - Embeddings: low-memory local hash embeddings by default, with optional FastEmbed/Hugging Face embeddings for machines with more RAM
 - Vector database: Qdrant local mode via `qdrant-client`
 - Sample corpus: public NASA Moon to Mars PDF documents
@@ -25,7 +25,7 @@ Only the chat model needs an API key. Embeddings do not need a hosted API key.
 ```env
 LLM_PROVIDER=openrouter
 OPENROUTER_API_KEY=your_key_here
-OPENROUTER_MODEL=openrouter/free
+OPENROUTER_MODEL=openai/gpt-oss-20b:free
 OPENROUTER_SITE_URL=http://localhost:3000
 OPENROUTER_APP_NAME=Atman RAG
 
@@ -34,7 +34,7 @@ FASTEMBED_MODEL=BAAI/bge-small-en-v1.5
 LOCAL_EMBEDDING_DIMENSIONS=512
 ```
 
-`openrouter/free` automatically routes to available free models. If you want to lock to a specific free open-source model, browse https://openrouter.ai/collections/free-models and replace `OPENROUTER_MODEL` with a model slug that ends in `:free`, for example `meta-llama/llama-3.2-3b-instruct:free` if it is currently available.
+If this specific free model is temporarily rate-limited, browse https://openrouter.ai/collections/free-models and replace `OPENROUTER_MODEL` with another current model slug that ends in `:free`.
 
 FastEmbed is supported for local experiments by setting `EMBEDDING_PROVIDER=fastembed`, but it can exceed Render free-tier memory while loading the ONNX model. Keep `EMBEDDING_PROVIDER=local` for the deployed demo unless you move to a larger instance.
 
@@ -88,6 +88,7 @@ The app has three abstention layers:
 - Retrieval threshold: if the top similarity score is below `MIN_RELEVANCE_SCORE`, the backend does not call the LLM and returns the "not found" answer.
 - Prompt contract: the model must return JSON with `supported: false` when the provided passages do not clearly answer the question.
 - Citation guard: if the model says an answer is supported but does not return a valid source ID, the backend abstains instead of showing an uncited answer.
+- Rate-limit fallback: if a free LLM provider is temporarily rate-limited and retrieval is high confidence, the backend returns a short extractive answer from the top passage with a citation instead of failing the request.
 
 This is intentionally conservative because the assignment values honesty over confident hallucination.
 
@@ -136,7 +137,7 @@ Backend on Render:
 4. Add environment variables:
    - `LLM_PROVIDER=openrouter`
    - `OPENROUTER_API_KEY=your_key`
-   - `OPENROUTER_MODEL=openrouter/free`
+   - `OPENROUTER_MODEL=openai/gpt-oss-20b:free`
    - `OPENROUTER_APP_NAME=Atman RAG`
    - `OPENROUTER_SITE_URL=https://your-vercel-domain.vercel.app`
    - `EMBEDDING_PROVIDER=local`
