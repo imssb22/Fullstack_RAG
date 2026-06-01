@@ -26,14 +26,14 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-2.5-flash-lite"
     gemini_embedding_model: str = "gemini-embedding-001"
-    embedding_provider: str = "fastembed"
+    embedding_provider: str = "local"
     fastembed_model: str = "BAAI/bge-small-en-v1.5"
-    local_embedding_dimensions: int = 768
+    local_embedding_dimensions: int = 512
 
     frontend_origin: str = "http://localhost:3000"
     frontend_origin_regex: str | None = None
     qdrant_path: Path = PROJECT_ROOT / "storage" / "qdrant"
-    collection_name: str = "atman_rag_chunks_fastembed"
+    collection_name: str = "atman_rag_chunks_local"
 
     data_dir: Path = PROJECT_ROOT / "data"
     sample_sources_path: Path = PROJECT_ROOT / "data" / "sample_sources.json"

@@ -7,11 +7,11 @@ A full-stack RAG application for the Atman Artwork LLP hiring task. Users can lo
 - Backend: FastAPI
 - Frontend: Next.js
 - LLM: OpenRouter free model router, default `openrouter/free`
-- Embeddings: FastEmbed with the open-source Hugging Face model `BAAI/bge-small-en-v1.5`
+- Embeddings: low-memory local hash embeddings by default, with optional FastEmbed/Hugging Face embeddings for machines with more RAM
 - Vector database: Qdrant local mode via `qdrant-client`
 - Sample corpus: public NASA Moon to Mars PDF documents
 
-OpenRouter keeps chat generation free for low-volume demos. FastEmbed runs embeddings locally, so indexing documents does not use LLM quota. Qdrant local mode keeps the vector database free and simple.
+OpenRouter keeps chat generation free for low-volume demos. The deployed default uses local hash embeddings so indexing documents does not use LLM quota and fits Render's free 512 MiB memory limit. Qdrant local mode keeps the vector database free and simple.
 
 ## Get The Free API Key
 
@@ -29,11 +29,14 @@ OPENROUTER_MODEL=openrouter/free
 OPENROUTER_SITE_URL=http://localhost:3000
 OPENROUTER_APP_NAME=Atman RAG
 
-EMBEDDING_PROVIDER=fastembed
+EMBEDDING_PROVIDER=local
 FASTEMBED_MODEL=BAAI/bge-small-en-v1.5
+LOCAL_EMBEDDING_DIMENSIONS=512
 ```
 
 `openrouter/free` automatically routes to available free models. If you want to lock to a specific free open-source model, browse https://openrouter.ai/collections/free-models and replace `OPENROUTER_MODEL` with a model slug that ends in `:free`, for example `meta-llama/llama-3.2-3b-instruct:free` if it is currently available.
+
+FastEmbed is supported for local experiments by setting `EMBEDDING_PROVIDER=fastembed`, but it can exceed Render free-tier memory while loading the ONNX model. Keep `EMBEDDING_PROVIDER=local` for the deployed demo unless you move to a larger instance.
 
 Do not commit `.env`. It is already ignored.
 
@@ -71,7 +74,7 @@ You can also click `Load NASA sample docs` in the UI. That downloads and ingests
 
 1. Documents are parsed from PDF, text, or markdown.
 2. Text is split into overlapping chunks with document/page metadata.
-3. Chunks are embedded locally with FastEmbed.
+3. Chunks are embedded locally with a deterministic low-memory embedder.
 4. Vectors and metadata are stored in Qdrant local mode.
 5. A user question is embedded and searched against selected documents.
 6. The top retrieved chunks are sent to OpenRouter with a strict JSON prompt.
@@ -136,14 +139,15 @@ Backend on Render:
    - `OPENROUTER_MODEL=openrouter/free`
    - `OPENROUTER_APP_NAME=Atman RAG`
    - `OPENROUTER_SITE_URL=https://your-vercel-domain.vercel.app`
-   - `EMBEDDING_PROVIDER=fastembed`
+   - `EMBEDDING_PROVIDER=local`
    - `FASTEMBED_MODEL=BAAI/bge-small-en-v1.5`
+   - `LOCAL_EMBEDDING_DIMENSIONS=512`
    - `AUTO_INGEST_SAMPLES=true`
    - `ALLOW_SAMPLE_DOWNLOAD=true`
    - `FRONTEND_ORIGIN=*` for the first test, then replace it with the Vercel URL.
    - `FRONTEND_ORIGIN_REGEX=https://.*\.vercel\.app` if you want Vercel preview deployments to work too.
 5. Deploy and open `https://your-render-api.onrender.com/api/health`.
-6. The first deploy can take longer because FastEmbed downloads the embedding model and indexes the sample PDFs.
+6. The first deploy can take longer because the app downloads the sample PDFs and indexes them.
 
 Frontend on Vercel:
 
@@ -164,6 +168,7 @@ If the frontend still calls `https://your-render-api.onrender.com`, the Vercel e
 - Render free services may sleep, so the first request can be slow.
 - Startup sample ingestion can be slow because PDFs must be downloaded, parsed, embedded, and indexed.
 - Free OpenRouter models can have lower rate limits, higher latency, and changing availability.
+- Local hash embeddings are intentionally lightweight for the free deployment. FastEmbed or a hosted embedding API would improve semantic retrieval on a larger budget.
 - The retrieval threshold is static; a production app should tune it with evaluation questions.
 - There is no user auth or per-user document isolation yet.
 - Uploaded files are stored on the backend filesystem, which may be ephemeral on free hosting.

@@ -25,9 +25,11 @@ services:
       - key: GEMINI_EMBEDDING_MODEL
         value: gemini-embedding-001
       - key: EMBEDDING_PROVIDER
-        value: fastembed
+        value: local
       - key: FASTEMBED_MODEL
         value: BAAI/bge-small-en-v1.5
+      - key: LOCAL_EMBEDDING_DIMENSIONS
+        value: "512"
       - key: FRONTEND_ORIGIN
         value: "*"
       - key: FRONTEND_ORIGIN_REGEX
