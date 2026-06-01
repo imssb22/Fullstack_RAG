@@ -10,10 +10,24 @@ services:
         value: 3.11.9
       - key: GEMINI_API_KEY
         sync: false
+      - key: LLM_PROVIDER
+        value: openrouter
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        value: openrouter/free
+      - key: OPENROUTER_APP_NAME
+        value: Atman RAG
+      - key: OPENROUTER_SITE_URL
+        value: https://fullstack-63owis4u6-sarveshs-projects-61fdd06b.vercel.app
       - key: GEMINI_MODEL
         value: gemini-2.5-flash-lite
       - key: GEMINI_EMBEDDING_MODEL
         value: gemini-embedding-001
+      - key: EMBEDDING_PROVIDER
+        value: fastembed
+      - key: FASTEMBED_MODEL
+        value: BAAI/bge-small-en-v1.5
       - key: FRONTEND_ORIGIN
         value: "*"
       - key: FRONTEND_ORIGIN_REGEX

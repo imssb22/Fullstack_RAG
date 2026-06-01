@@ -10,7 +10,9 @@ from app.services.documents import (
     load_document,
     title_from_path,
 )
-from app.services.gemini import GeminiClient, GeminiError
+from app.services.embeddings import Embedder
+from app.services.gemini import GeminiError
+from app.services.llm import LLMClient
 from app.services.registry import DocumentRegistry
 from app.services.vector_store import VectorStore
 
@@ -22,12 +24,14 @@ class RagService:
     def __init__(
         self,
         settings: Settings,
-        gemini: GeminiClient,
+        llm: LLMClient,
+        embedder: Embedder,
         vector_store: VectorStore,
         registry: DocumentRegistry,
     ):
         self.settings = settings
-        self.gemini = gemini
+        self.llm = llm
+        self.embedder = embedder
         self.vector_store = vector_store
         self.registry = registry
 
@@ -40,7 +44,12 @@ class RagService:
     ) -> DocumentRecord:
         document_id = document_id_for(path, source_url=source_url)
         existing = self.registry.get(document_id)
-        if existing and not replace and self.vector_store.collection_exists():
+        if (
+            existing
+            and not replace
+            and self.vector_store.collection_exists()
+            and self._record_matches_embedding(existing)
+        ):
             return existing
 
         pages = load_document(path)
@@ -52,7 +61,7 @@ class RagService:
         if not chunks:
             raise ValueError(f"No extractable text found in {path.name}.")
 
-        vectors = await self.gemini.embed_texts(
+        vectors = await self.embedder.embed_texts(
             [chunk.text for chunk in chunks],
             task_type="RETRIEVAL_DOCUMENT",
         )
@@ -70,6 +79,9 @@ class RagService:
             file_type=detect_file_type(path),
             created_at=datetime.now(tz=timezone.utc),
             chunk_count=len(chunks),
+            embedding_provider=self.settings.embedding_provider,
+            embedding_model=self._embedding_model(),
+            embedding_dimensions=len(vectors[0]),
         )
 
         payloads = []
@@ -97,6 +109,31 @@ class RagService:
         self.registry.upsert(record)
         return record
 
+    def _embedding_dimensions(self) -> int | None:
+        if self.settings.embedding_provider.lower().strip() == "local":
+            return self.settings.local_embedding_dimensions
+        return None
+
+    def _embedding_model(self) -> str | None:
+        provider = self.settings.embedding_provider.lower().strip()
+        if provider == "fastembed":
+            return self.settings.fastembed_model
+        if provider == "gemini":
+            return self.settings.gemini_embedding_model
+        if provider == "local":
+            return f"local-hash-{self.settings.local_embedding_dimensions}"
+        return None
+
+    def _record_matches_embedding(self, record: DocumentRecord) -> bool:
+        provider = self.settings.embedding_provider.lower().strip()
+        if record.embedding_provider != provider:
+            return False
+        if record.embedding_model != self._embedding_model():
+            return False
+        if provider == "local":
+            return record.embedding_dimensions == self.settings.local_embedding_dimensions
+        return True
+
     async def answer(
         self,
         question: str,
@@ -104,7 +141,7 @@ class RagService:
         top_k: int | None = None,
     ) -> AskResponse:
         selected_ids = document_ids or []
-        query_vector = await self.gemini.embed_text(
+        query_vector = await self.embedder.embed_text(
             question,
             task_type="RETRIEVAL_QUERY",
         )
@@ -123,7 +160,7 @@ class RagService:
                 retrieved_chunks=retrieved,
             )
 
-        model_result = await self.gemini.generate_json(
+        model_result = await self.llm.generate_json(
             self._build_prompt(question, retrieved)
         )
         supported = bool(model_result.get("supported"))

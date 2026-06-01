@@ -12,6 +12,9 @@ class DocumentRecord(BaseModel):
     file_type: str
     created_at: datetime
     chunk_count: int = 0
+    embedding_provider: str | None = None
+    embedding_model: str | None = None
+    embedding_dimensions: int | None = None
 
 
 class RetrievedChunk(BaseModel):

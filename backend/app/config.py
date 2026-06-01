@@ -16,14 +16,24 @@ class Settings(BaseSettings):
     )
 
     app_name: str = "Atman RAG"
+
+    llm_provider: str = "openrouter"
+    openrouter_api_key: str | None = None
+    openrouter_model: str = "openrouter/free"
+    openrouter_site_url: str = "http://localhost:3000"
+    openrouter_app_name: str = "Atman RAG"
+
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-2.5-flash-lite"
     gemini_embedding_model: str = "gemini-embedding-001"
+    embedding_provider: str = "fastembed"
+    fastembed_model: str = "BAAI/bge-small-en-v1.5"
+    local_embedding_dimensions: int = 768
 
     frontend_origin: str = "http://localhost:3000"
     frontend_origin_regex: str | None = None
     qdrant_path: Path = PROJECT_ROOT / "storage" / "qdrant"
-    collection_name: str = "atman_rag_chunks"
+    collection_name: str = "atman_rag_chunks_fastembed"
 
     data_dir: Path = PROJECT_ROOT / "data"
     sample_sources_path: Path = PROJECT_ROOT / "data" / "sample_sources.json"

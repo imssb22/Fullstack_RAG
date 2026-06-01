@@ -35,13 +35,15 @@ export default function Home() {
       try {
         const health = await apiJson<{
           status: string;
-          gemini_configured: boolean;
+          llm_configured: boolean;
+          llm_provider: string;
+          embedding_provider: string;
           documents: number;
         }>("/api/health");
         setStatus(
-          health.gemini_configured
-            ? "Backend ready"
-            : "Backend running, Gemini key missing"
+          health.llm_configured
+            ? `Backend ready · ${health.llm_provider} + ${health.embedding_provider}`
+            : "Backend running, LLM key missing"
         );
         await refreshDocuments();
       } catch (err) {

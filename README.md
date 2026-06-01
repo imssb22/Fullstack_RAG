@@ -6,26 +6,34 @@ A full-stack RAG application for the Atman Artwork LLP hiring task. Users can lo
 
 - Backend: FastAPI
 - Frontend: Next.js
-- LLM: Gemini API, default `gemini-2.5-flash-lite`
-- Embeddings: Gemini API, default `gemini-embedding-001`
+- LLM: OpenRouter free model router, default `openrouter/free`
+- Embeddings: FastEmbed with the open-source Hugging Face model `BAAI/bge-small-en-v1.5`
 - Vector database: Qdrant local mode via `qdrant-client`
 - Sample corpus: public NASA Moon to Mars PDF documents
 
-Qdrant local mode keeps the demo simple and free: no separate vector DB account is required. The code can move to Qdrant Cloud later by changing the vector store connection.
+OpenRouter keeps chat generation free for low-volume demos. FastEmbed runs embeddings locally, so indexing documents does not use LLM quota. Qdrant local mode keeps the vector database free and simple.
 
 ## Get The Free API Key
 
-1. Go to Google AI Studio: https://aistudio.google.com/app/apikey
-2. Sign in with a Google account.
+Only the chat model needs an API key. Embeddings do not need a hosted API key.
+
+1. Go to OpenRouter: https://openrouter.ai/settings/keys
+2. Sign in.
 3. Create an API key.
-4. Keep billing disabled if you want to stay on the free tier.
-5. Put the key in the root `.env` file:
+4. Put the key in the root `.env` file:
 
 ```env
-GEMINI_API_KEY=your_key_here
-GEMINI_MODEL=gemini-2.5-flash-lite
-GEMINI_EMBEDDING_MODEL=gemini-embedding-001
+LLM_PROVIDER=openrouter
+OPENROUTER_API_KEY=your_key_here
+OPENROUTER_MODEL=openrouter/free
+OPENROUTER_SITE_URL=http://localhost:3000
+OPENROUTER_APP_NAME=Atman RAG
+
+EMBEDDING_PROVIDER=fastembed
+FASTEMBED_MODEL=BAAI/bge-small-en-v1.5
 ```
+
+`openrouter/free` automatically routes to available free models. If you want to lock to a specific free open-source model, browse https://openrouter.ai/collections/free-models and replace `OPENROUTER_MODEL` with a model slug that ends in `:free`, for example `meta-llama/llama-3.2-3b-instruct:free` if it is currently available.
 
 Do not commit `.env`. It is already ignored.
 
@@ -63,10 +71,10 @@ You can also click `Load NASA sample docs` in the UI. That downloads and ingests
 
 1. Documents are parsed from PDF, text, or markdown.
 2. Text is split into overlapping chunks with document/page metadata.
-3. Chunks are embedded using Gemini embeddings.
+3. Chunks are embedded locally with FastEmbed.
 4. Vectors and metadata are stored in Qdrant local mode.
 5. A user question is embedded and searched against selected documents.
-6. The top retrieved chunks are sent to Gemini with a strict JSON prompt.
+6. The top retrieved chunks are sent to OpenRouter with a strict JSON prompt.
 7. The answer is returned only if retrieval and the model both support it.
 8. Citations are shown from the retrieved chunks, including document, page, score, and snippet.
 
@@ -75,8 +83,8 @@ You can also click `Load NASA sample docs` in the UI. That downloads and ingests
 The app has three abstention layers:
 
 - Retrieval threshold: if the top similarity score is below `MIN_RELEVANCE_SCORE`, the backend does not call the LLM and returns the "not found" answer.
-- Prompt contract: Gemini must return JSON with `supported: false` when the provided passages do not clearly answer the question.
-- Citation guard: if Gemini says an answer is supported but does not return a valid source ID, the backend abstains instead of showing an uncited answer.
+- Prompt contract: the model must return JSON with `supported: false` when the provided passages do not clearly answer the question.
+- Citation guard: if the model says an answer is supported but does not return a valid source ID, the backend abstains instead of showing an uncited answer.
 
 This is intentionally conservative because the assignment values honesty over confident hallucination.
 
@@ -123,15 +131,19 @@ Backend on Render:
    - Build command: `pip install -r backend/requirements.txt`
    - Start command: `cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 4. Add environment variables:
-   - `GEMINI_API_KEY`
-   - `GEMINI_MODEL=gemini-2.5-flash-lite`
-   - `GEMINI_EMBEDDING_MODEL=gemini-embedding-001`
+   - `LLM_PROVIDER=openrouter`
+   - `OPENROUTER_API_KEY=your_key`
+   - `OPENROUTER_MODEL=openrouter/free`
+   - `OPENROUTER_APP_NAME=Atman RAG`
+   - `OPENROUTER_SITE_URL=https://your-vercel-domain.vercel.app`
+   - `EMBEDDING_PROVIDER=fastembed`
+   - `FASTEMBED_MODEL=BAAI/bge-small-en-v1.5`
    - `AUTO_INGEST_SAMPLES=true`
    - `ALLOW_SAMPLE_DOWNLOAD=true`
    - `FRONTEND_ORIGIN=*` for the first test, then replace it with the Vercel URL.
    - `FRONTEND_ORIGIN_REGEX=https://.*\.vercel\.app` if you want Vercel preview deployments to work too.
 5. Deploy and open `https://your-render-api.onrender.com/api/health`.
-6. After the first successful deploy, open the backend URL once. The free service may take a little while to wake up.
+6. The first deploy can take longer because FastEmbed downloads the embedding model and indexes the sample PDFs.
 
 Frontend on Vercel:
 
@@ -151,6 +163,7 @@ If the frontend still calls `https://your-render-api.onrender.com`, the Vercel e
 - Qdrant local mode is fine for demos, but production should use Qdrant Cloud, pgvector, or another managed vector DB.
 - Render free services may sleep, so the first request can be slow.
 - Startup sample ingestion can be slow because PDFs must be downloaded, parsed, embedded, and indexed.
+- Free OpenRouter models can have lower rate limits, higher latency, and changing availability.
 - The retrieval threshold is static; a production app should tune it with evaluation questions.
 - There is no user auth or per-user document isolation yet.
 - Uploaded files are stored on the backend filesystem, which may be ephemeral on free hosting.

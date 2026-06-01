@@ -16,7 +16,9 @@ class VectorStore:
 
     def ensure_collection(self, vector_size: int) -> None:
         if self.collection_exists():
-            return
+            if self._vector_size() == vector_size:
+                return
+            self.client.delete_collection(collection_name=self.collection_name)
         self.client.create_collection(
             collection_name=self.collection_name,
             vectors_config=models.VectorParams(
@@ -82,3 +84,18 @@ class VectorStore:
     def collection_exists(self) -> bool:
         collections = self.client.get_collections().collections
         return any(item.name == self.collection_name for item in collections)
+
+    def _vector_size(self) -> int | None:
+        info = self.client.get_collection(collection_name=self.collection_name)
+        vectors_config = info.config.params.vectors
+        size = getattr(vectors_config, "size", None)
+        if size is not None:
+            return int(size)
+        if isinstance(vectors_config, dict) and vectors_config:
+            first = next(iter(vectors_config.values()))
+            first_size = getattr(first, "size", None)
+            if first_size is not None:
+                return int(first_size)
+            if isinstance(first, dict) and first.get("size") is not None:
+                return int(first["size"])
+        return None
